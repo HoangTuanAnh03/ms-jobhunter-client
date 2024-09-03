@@ -1,22 +1,33 @@
-// 'use client'
+'use client'
+import LoginForm from "@/app/(auth)/login/login-form";
+import { Button } from "@/components/ui/button";
 import { websites } from "@/lib/data";
-// import { useState } from 'react'
+import { sendRequest } from "@/utils/api";
 
 export default function LoginPage() {
+  async function onSubmit() {
+    const res = await sendRequest<any>({
+      url: "http://localhost:8080/auth/refresh",
+      method: "POST",
+      body: {
+        email: "your-email",
+        password: "your-password",
+      },
+    });
+    console.log(res.code);}
+
   return (
     <div>
-      Login page
-      <ul>
-        {websites.map((item) => {
-          return (
-            <li key={item.url}>
-              <a href={item.url} target="_blank" rel="noreferrer">
-                {item.name}
-              </a>
-            </li>
-          );
-        })}
-      </ul>
+      <h1 className='text-xl font-semibold text-center mt-10'>Đăng nhập</h1>
+      <div className='flex justify-center'>
+      <div
+          className="!mt-8 w-full"
+          onClick={onSubmit}
+        >
+          Đăng nhập bằng Email
+        </div>
+        <LoginForm />
+      </div>
     </div>
   );
 }
