@@ -1,5 +1,4 @@
 "use client";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
-  RegisterBody,
   LoginBodyType,
   LoginBody,
 } from "@/schemaValidations/auth.schema";
@@ -29,56 +27,43 @@ const LoginForm = () => {
     resolver: zodResolver(LoginBody),
     mode: "all",
     defaultValues: {
-      email: "",
-      password: "",
+      email: "user@gmail.com",
+      password: "12345678",
     },
   });
 
   // 2. Define a submit handler.
   async function onSubmit(values: LoginBodyType) {
-    // const res = await sendRequest<IBackendRes<ILoginResponse>>({
-    //   url: "http://localhost:8080/auth/login",
-    //   method: "POST",
-    //   body: {
-    //     email: values.email,
-    //     password: values.password,
-    //   },
-    //   useCredentials: true,
-    // });
-    // console.log(res.code);
-
-    const res = await fetch("http://localhost:8080/auth/login", {
+    const res = await sendRequest<IBackendRes<ILoginResponse>>({
+      url:  `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/auth/login`,
       method: "POST",
-      body: JSON.stringify(values),
-      headers: {
-        "Content-Type": "application/json",
+      body: {
+        email: values.email,
+        password: values.password,
       },
     });
-    console.log("🚀 ~ onSubmit ~ res:", res);
+    console.log(res.code);
 
-    // if (res.code === 200) {
-    //   // toast("Đăng nhập thành công");
-    //   // form.reset();
-
-      
-    //   const resultFromNextServer = await fetch("/api/auth", {
-    //     method: "POST",
-    //     body: JSON.stringify(res),
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //   });
-    // } else {
-    //   toast({
-    //     type: "background",
-    //     // typeof: Button,
-    //     title: "Nhập sai Email hoặc mật khẩu ",
-    //     // description: "Friday, February 10, 2023 at 5:57 PM",
-    //     // action: (
-    //     //   <ToastAction altText="Goto schedule to undo">Undo</ToastAction>
-    //     // ),
-    //   });
-    // }
+    if (res.code === 200) {
+      // toast("Đăng nhập thành công");
+      // form.reset();
+      const resultFromNextServer = await fetch("/api/auth", {
+        method: "POST",
+        body: JSON.stringify(res),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    } else {
+      toast({
+        variant:"destructive",
+        title: "Nhập sai Email hoặc mật khẩu ",
+        // description: "Friday, February 10, 2023 at 5:57 PM",
+        // action: (
+        //   <ToastAction altText="Goto schedule to undo">Undo</ToastAction>
+        // ),
+      });
+    }
   }
 
   return (
