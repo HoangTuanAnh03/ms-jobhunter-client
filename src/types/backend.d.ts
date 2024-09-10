@@ -2,47 +2,6 @@ export {};
 // https://bobbyhadz.com/blog/typescript-make-types-global#declare-global-types-in-typescript
 
 declare global {
-  interface ITrackTop {
-    _id: string;
-    title: string;
-    description: string;
-    category: string;
-    imgUrl: string;
-    trackUrl: string;
-    countLike: number;
-    countPlay: number;
-    uploader: {
-      _id: string;
-      email: string;
-      name: string;
-      role: string;
-      type: string;
-    };
-    isDeleted: boolean;
-    createdAt: string;
-    updatedAt: string;
-  }
-
-  interface ILoginResponse {
-    user: {
-      id: string;
-      email: string;
-      name: string;
-      role: string;
-    };
-    access_token: string;
-    refresh_token: string;
-  }
-
-  interface IRequest {
-    url: string;
-    method: string;
-    body?: { [key: string]: any };
-    queryParams?: any;
-    useCredentials?: boolean;
-    headers?: any;
-    nextOption?: any;
-  }
 
   interface IBackendRes<T> {
     message: string;

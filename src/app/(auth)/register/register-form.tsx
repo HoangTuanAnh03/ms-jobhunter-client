@@ -1,5 +1,4 @@
 "use client";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -16,52 +15,50 @@ import {
   RegisterBody,
   RegisterBodyType,
 } from "@/schemaValidations/auth.schema";
-import envConfig from "@/config";
-import { sendRequest } from "@/utils/api";
+import { useToast } from "@/hooks/use-toast";
+import authApiRequest from "@/apiRequests/auth";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import Link from "next/link";
+import { Checkbox } from "@/components/ui/checkbox";
+import { format } from "path";
 
 const RegisterForm = () => {
+  const { toast } = useToast();
+  const router = useRouter();
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [isChecked, setIsChecked] = useState(false);
+
   const form = useForm<RegisterBodyType>({
     resolver: zodResolver(RegisterBody),
+    mode: "all",
     defaultValues: {
-      email: "",
-      name: "",
-      password: "",
-      // confirmPassword: "",
+      name: "Hoàng Tuấn Anh",
+      email: "user@gmail.com",
+      password: "12345678",
     },
   });
 
   // 2. Define a submit handler.
   async function onSubmit(values: RegisterBodyType) {
-    // const result = await fetch(
-    //   `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/auth/register`,
-    //   {
-    //     body: JSON.stringify(values),
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //     method: "POST",
-    //   }
-    // ).then((res) => res.json());
-    // console.log(result);
-    console.log("🚀 ~ onSubmit ~ values:", values)
-    
+    const resRegister = await authApiRequest.register(values);
 
-    const res = await sendRequest<IBackendRes<any>>({
-      url: "http://localhost:8080/auth/register",
-      method: "POST",
-      body: {
-        email: values.email,
-        name: values.name,
-        password: values.password,
-      },
-    });
-    console.log(res);
+    if (resRegister.payload.code === 201) {
+      // form.reset();    
+      router.push(`/verify_email?email=${values.email}`);
+    } else if (resRegister.payload.code === 409) {
+      toast({
+        variant: "destructive",
+        title: "Email đã được đăng ký!",
+      });
+    }
   }
+
   return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-2 max-w-[600px] flex-shrink-0 w-full"
+        className="space-y-4 flex-shrink-0 w-full"
         noValidate
       >
         <FormField
@@ -73,7 +70,7 @@ const RegisterForm = () => {
                 Họ và Tên <abbr className="text-red-600">*</abbr>
               </FormLabel>
               <FormControl>
-                <Input placeholder="Họ và Tên" {...field} />
+                <Input className="h-11" placeholder="Họ và Tên" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -88,7 +85,12 @@ const RegisterForm = () => {
                 Email <abbr className="text-red-600">*</abbr>
               </FormLabel>
               <FormControl>
-                <Input placeholder="Email" type="email" {...field} />
+                <Input
+                  className="h-11"
+                  placeholder="Email"
+                  type="email"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -102,27 +104,69 @@ const RegisterForm = () => {
               <FormLabel>
                 Mật khẩu <abbr className="text-red-600">*</abbr>
               </FormLabel>
+
               <FormControl>
-                <Input placeholder="Mật khẩu" type="password" {...field} />
+                <Input
+                  className="h-11"
+                  placeholder="Mật khẩu"
+                  type="password"
+                  {...field}
+                />
+                {/* <PasswordInput/> */}
+                {/* <PasswordInput
+                  id="password_confirmation"
+                  // value={passwordConfirmation}
+                  // onChange={(e) => setPasswordConfirmation(e.target.value)}
+                  autoComplete="new-password"
+                /> */}
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        {/* <FormField
-          control={form.control}
-          name="confirmPassword"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nhập lại mật khẩu</FormLabel>
-              <FormControl>
-                <Input placeholder="shadcn" type="password" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        /> */}
-        <Button type="submit" className="!mt-8 w-full">
+
+        <label
+          htmlFor="termRegister"
+          className="my-4 text-[#414042] text-[16px] font-medium cursor-pointer inline-block group select-none"
+        >
+          <div
+            className={
+              isChecked
+                ? "inline-flex h-12 w-12 items-center justify-center rounded-full group-hover:bg-[#cb4040] group-hover:bg-opacity-20"
+                : "inline-flex h-12 w-12 items-center justify-center rounded-full group-hover:bg-[#a6a6a6] group-hover:bg-opacity-20"
+            }
+          >
+            <Checkbox
+              onCheckedChange={() => {
+                setIsChecked(!isChecked);
+              }}
+              id="termRegister"
+              className={
+                isChecked
+                  ? "data-[state=checked]:bg-primary[data-state=checked] w-6 h-6 border-red-600 border-2 bg-red-600"
+                  : "w-6 h-6  border-2"
+              }
+            />
+          </div>
+          Tôi đã đọc và đồng ý với các{" "}
+          <Link href={"#"} className="text-[#0e2eed]">
+            Điều khoản dịch vụ
+          </Link>{" "}
+          và{" "}
+          <Link href={"#"} className="text-[#0e2eed]">
+            Chính sách quyền riêng tư
+          </Link>{" "}
+          của ITviec liên quan đến thông tin riêng tư của bạn.
+        </label>
+
+        <Button
+          type="submit"
+          className={
+            isChecked
+              ? "!mt-8 w-full h-11 bg-[#ED1B2F] hover:bg-[#c83333] text-[16px]"
+              : "!mt-8 w-full h-11 bg-[#a6a6a6] text-[16px] pointer-events-none"
+          }
+        >
           Đăng ký bằng Email
         </Button>
       </form>

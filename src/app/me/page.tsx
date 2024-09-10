@@ -1,10 +1,15 @@
+// 'use client'
 // import Profile from '@/app/me/profile'
 import envConfig from '@/config'
 import { cookies } from 'next/headers'
 
-export default async function MeProfile() {
-  const cookieStore = cookies()
-  const sessionToken = cookieStore.get('sessionToken')
+export default function MeProfile() {
+  // const cookieStore = cookies()
+  // const sessionToken = cookieStore.get('accessToken')
+  // console.log("🚀 ~ MeProfile ~ sessionToken:", sessionToken)
+  // const refreshToken = cookieStore.get('refreshToken')
+  // console.log("🚀 ~ MeProfile ~ refreshToken:", refreshToken)
+  
   // const result = await fetch(
   //   `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/account/me`,
   //   {

@@ -41,7 +41,7 @@ function Header() {
     className="sticky top-0 h-16 py-0 px-4 z-50 w-full flex items-center justify-center bg-custom-gradient">
       <div className="max-w-[1860px] w-full h-full flex items-center justify-between">
         <div>
-          <Image src={"/image/logo.png"} width={90} height={40} alt="Logo" />
+          <Image src={"/logo.png"} width={90} height={40} alt="Logo" />
         </div>
         <div>
           {/* {session ? ( */}

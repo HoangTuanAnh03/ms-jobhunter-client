@@ -11,17 +11,19 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  LoginBodyType,
-  LoginBody,
-} from "@/schemaValidations/auth.schema";
-import envConfig from "@/config";
-import { sendRequest } from "@/utils/api";
+import { LoginBodyType, LoginBody } from "@/schemaValidations/auth.schema";
 import { useToast } from "@/hooks/use-toast";
-import { ToastAction } from "@/components/ui/toast";
+import authApiRequest from "@/apiRequests/auth";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Description } from "@radix-ui/react-toast";
+import Link from "next/link";
+
 
 const LoginForm = () => {
   const { toast } = useToast();
+  const router = useRouter();
+  const [passwordConfirmation, setPasswordConfirmation] = useState("")
 
   const form = useForm<LoginBodyType>({
     resolver: zodResolver(LoginBody),
@@ -34,29 +36,16 @@ const LoginForm = () => {
 
   // 2. Define a submit handler.
   async function onSubmit(values: LoginBodyType) {
-    const res = await sendRequest<IBackendRes<ILoginResponse>>({
-      url:  `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/auth/login`,
-      method: "POST",
-      body: {
-        email: values.email,
-        password: values.password,
-      },
-    });
-    console.log(res.code);
+    const resLogin = await authApiRequest.login(values);
 
-    if (res.code === 200) {
+    if (resLogin.payload.code === 200) {
       // toast("Đăng nhập thành công");
       // form.reset();
-      const resultFromNextServer = await fetch("/api/auth", {
-        method: "POST",
-        body: JSON.stringify(res),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      // await authApiRequest.auth(resLogin.payload);
+      router.push("/");
     } else {
       toast({
-        variant:"destructive",
+        variant: "destructive",
         title: "Nhập sai Email hoặc mật khẩu ",
         // description: "Friday, February 10, 2023 at 5:57 PM",
         // action: (
@@ -70,7 +59,7 @@ const LoginForm = () => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-2 max-w-[600px] flex-shrink-0 w-full"
+        className="space-y-4 flex-shrink-0 w-full"
         noValidate
       >
         <FormField
@@ -82,7 +71,7 @@ const LoginForm = () => {
                 Email <abbr className="text-red-600">*</abbr>
               </FormLabel>
               <FormControl>
-                <Input placeholder="Email" type="email" {...field} />
+                <Input className="h-11" placeholder="Email" type="email" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -93,20 +82,32 @@ const LoginForm = () => {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>
-                Mật khẩu <abbr className="text-red-600">*</abbr>
-              </FormLabel>
+              <div className="flex justify-between items-center">
+                <FormLabel>
+                  Mật khẩu <abbr className="text-red-600">*</abbr>
+                </FormLabel>
+                <Description className="text-[#192fb5] font-normal">
+                  <Link href={"#"}>Quên mật khẩu?</Link>
+                </Description>
+              </div>
               <FormControl>
-                <Input placeholder="Mật khẩu" type="password" {...field} />
+                <Input className="h-11" placeholder="Mật khẩu" type="password" {...field} />
+                {/* <PasswordInput/> */}
+                {/* <PasswordInput
+                  id="password_confirmation"
+                  // value={passwordConfirmation}
+                  // onChange={(e) => setPasswordConfirmation(e.target.value)}
+                  autoComplete="new-password"
+                /> */}
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <Button
           type="submit"
-          className="!mt-8 w-full"
+          className="!mt-8 w-full h-11 bg-[#c82222] text-[16px]"
         >
           Đăng nhập bằng Email
         </Button>

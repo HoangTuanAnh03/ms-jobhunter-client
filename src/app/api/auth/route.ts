@@ -1,7 +1,7 @@
-export async function POST(request: Request) {
-  const res: IBackendRes<ILoginResponse> = await request.json();
-  // console.log("🚀 ~ POST ~ refreshToken:", refreshToken)
+import { LoginResType } from "@/schemaValidations/auth.schema";
 
+export async function POST(request: Request) {
+  const res: IBackendRes<LoginResType> = await request.json();
   const accessToken = res.data?.access_token;
   const refreshToken = res.data?.refresh_token;
   if (!accessToken) {

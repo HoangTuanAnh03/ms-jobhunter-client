@@ -32,7 +32,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Header />
-          <AppProvider initialAccessToken={accessToken?.value} initialRefreshToken={refreshToken?.value}>
+          <AppProvider initialAccessToken={accessToken?.value} 
+          // initialRefreshToken={refreshToken?.value}
+          >
             {children}
           </AppProvider>
         </ThemeProvider>
