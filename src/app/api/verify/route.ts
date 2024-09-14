@@ -1,31 +1,27 @@
+import authApiRequest from "@/apiRequests/auth";
 import { redirect } from "next/navigation";
+import { NextRequest } from "next/server";
 
-export async function GET(request: Request) {
-  // const res: IBackendRes<LoginResType> = await request.json();
-  // console.log("🚀 ~ POST ~ refreshToken:", refreshToken)
+type Params = {
+  code: string;
+};
 
-  // const accessToken = res.data?.access_token;
-  // const refreshToken = res.data?.refresh_token;
-  // if (!accessToken) {
-  //   return Response.json(
-  //     { message: "Không nhận được access token" },
-  //     {
-  //       status: 400,
-  //     }
-  //   );
-  // }
-  // const headers = new Headers();
-  // headers.append(
-  //   "Set-Cookie",
-  //   `accessToken=${accessToken}; Path=/; HttpOnly; Secure`
-  // );
-  // headers.append(
-  //   "Set-Cookie",
-  //   `refreshToken=${refreshToken}; Path=/; HttpOnly; Secure`
-  // );
-  redirect("/login")
+export async function GET(request: NextRequest, context: { params: Params }) {
+  const code = request.nextUrl.searchParams.get("code");
+  const res = await authApiRequest.verifyRegister(code!);
+
+  if (res.payload.code === 200) {
+    // success
+    redirect("/verify_email?type=success");
+  } else if (res.payload.code === 400) {
+    // fail
+    redirect("/verify_email?type=failed");
+  } else if (res.payload.code === 1005) {
+    // timeout
+    redirect("/verify_email?type=timeout");
+  }
+
   return Response.json("res.data", {
     status: 200,
-    // headers: headers,
   });
 }

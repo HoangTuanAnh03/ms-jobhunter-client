@@ -17,6 +17,11 @@ const authApiRequest = {
     http.post("/api/auth", body, {
       baseUrl: "",
     }),
+  
+  verifyRegister: (code: string) =>
+    http.get<IBackendRes<LoginResType>>(
+      `/auth/verifyRegister?code=${code}`,
+    ),
 
   outbound: (code: string) =>
     http.post<IBackendRes<LoginResType>>(
