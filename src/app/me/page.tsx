@@ -1,34 +1,23 @@
-// 'use client'
-// import Profile from '@/app/me/profile'
-import envConfig from '@/config'
+'use client'
+import accountApiRequest from '@/apiRequests/account'
+import { handleErrorApi } from '@/lib/utils'
 import { cookies } from 'next/headers'
+import { useEffect } from 'react'
 
 export default function MeProfile() {
-  // const cookieStore = cookies()
-  // const sessionToken = cookieStore.get('accessToken')
-  // console.log("🚀 ~ MeProfile ~ sessionToken:", sessionToken)
-  // const refreshToken = cookieStore.get('refreshToken')
-  // console.log("🚀 ~ MeProfile ~ refreshToken:", refreshToken)
-  
-  // const result = await fetch(
-  //   `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/account/me`,
-  //   {
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //       Authorization: `Bearer ${sessionToken?.value}`
-  //     }
-  //   }
-  // ).then(async (res) => {
-  //   const payload = await res.json()
-  //   const data = {
-  //     status: res.status,
-  //     payload
-  //   }
-  //   if (!res.ok) {
-  //     throw data
-  //   }
-  //   return data
-  // })
+  useEffect(() => {
+    const fetchRequest = async () => {
+      try {
+        const result = await accountApiRequest.meClient()
+        console.log(result)
+      } catch (error) {
+        handleErrorApi({
+          error
+        })
+      }
+    }
+    fetchRequest()
+  }, [])
   return (
     <div>
       <h1>Profile</h1>

@@ -1,16 +1,45 @@
 import authApiRequest from "@/apiRequests/auth";
 import envConfig from "@/config";
+import { normalizePath } from "@/lib/utils";
 import { LoginResType } from "@/schemaValidations/auth.schema";
+import { redirect } from 'next/navigation'
 
 type CustomOptions = Omit<RequestInit, "method"> & {
   baseUrl?: string | undefined;
 };
 
-class HttpError extends Error {
+const ENTITY_ERROR_STATUS = 422;
+const AUTHENTICATION_ERROR_STATUS = 401
+
+type EntityErrorPayload = {
+  message: string;
+  errors: {
+    field: string;
+    message: string;
+  }[];
+};
+
+export class HttpError extends Error {
   status: number;
   payload: any;
   constructor({ status, payload }: { status: number; payload: any }) {
     super("Http Error");
+    this.status = status;
+    this.payload = payload;
+  }
+}
+
+export class EntityError extends HttpError {
+  status: 422;
+  payload: EntityErrorPayload;
+  constructor({
+    status,
+    payload,
+  }: {
+    status: 422;
+    payload: EntityErrorPayload;
+  }) {
+    super({ status, payload });
     this.status = status;
     this.payload = payload;
   }
@@ -31,6 +60,7 @@ class AccessToken {
 }
 
 export const clientAccessToken = new AccessToken();
+let clientLogoutRequest: null | Promise<any> = null
 
 const request = async <Response>(
   method: "GET" | "POST" | "PUT" | "DELETE",
@@ -70,21 +100,58 @@ const request = async <Response>(
     status: res.status,
     payload,
   };
-  // if (!res.ok) {
-  //   throw new HttpError(data)
-  // }
+  // Interceptor là nời chúng ta xử lý request và response trước khi trả về cho phía component
+  if (!res.ok) {
+    if (res.status === ENTITY_ERROR_STATUS) {
+      throw new EntityError(
+        data as {
+          status: 422;
+          payload: EntityErrorPayload;
+        }
+      );
+    } else if (res.status === AUTHENTICATION_ERROR_STATUS) {
+      if (typeof window !== 'undefined') {
+        if (!clientLogoutRequest) {
+          clientLogoutRequest = fetch('/api/logout', {
+            method: 'POST',
+            body: JSON.stringify({ force: true }),
+            headers: {
+              ...baseHeaders
+            }
+          })
 
-  const urlAuth = ["/auth/login", "/auth/outbound"];
-
-  if (urlAuth.some((path) => url.startsWith(path))) {
-    clientAccessToken.value = (
-      payload as IBackendRes<LoginResType>
-    ).data?.access_token!;
-    await authApiRequest.auth(payload as IBackendRes<LoginResType>);
-  } else if(url.startsWith("/auth/logout")) {
-    clientAccessToken.value = "";
+          await clientLogoutRequest
+          clientAccessToken.value = ''
+          clientLogoutRequest = null
+          location.href = '/login'
+        }
+      } else {
+        const sessionToken = (options?.headers as any)?.Authorization.split(
+          'Bearer '
+        )[1]
+        redirect(`/logout?sessionToken=${sessionToken}`)
+      }
+    }
+    else {
+      throw new HttpError(data);
+    }
   }
 
+  // Đảm bảo logic dưới đây chỉ chạy ở phía client (browser)
+  if (typeof window !== "undefined") {
+    if (
+      ["auth/login", "auth/outbound"].some(
+        (item) => normalizePath(url).startsWith(item)
+      )
+    ) {
+      clientAccessToken.value = (
+        payload as IBackendRes<LoginResType>
+      ).data?.access_token!;
+      await authApiRequest.auth(payload as IBackendRes<LoginResType>);
+    } else if ("auth/logout" === normalizePath(url)) {
+      clientAccessToken.value = "";
+    }
+  }
   return data;
 };
 

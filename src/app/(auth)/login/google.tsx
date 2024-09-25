@@ -13,8 +13,6 @@ const handleLoginGoogle = () => {
     callbackUrl
   )}&response_type=code&client_id=${googleClientId}&scope=openid%20email%20profile`;
 
-  console.log(targetUrl);
-
   window.location.href = targetUrl;
 };
 

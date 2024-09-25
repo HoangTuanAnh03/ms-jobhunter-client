@@ -9,8 +9,6 @@ export default function Authentication() {
   const [isLogin, setIsLogin] = useState(false);
 
   useEffect(() => {
-    console.log(window.location.href);
-
     const authCodeRegex = /code=([^&]+)/;
     const isMatch = window.location.href.match(authCodeRegex);
 

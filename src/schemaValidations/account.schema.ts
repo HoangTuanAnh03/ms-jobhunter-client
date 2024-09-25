@@ -5,7 +5,20 @@ export const AccountRes = z
     data: z.object({
       id: z.number(),
       name: z.string(),
-      email: z.string()
+      email: z.string(),
+      gender: z.string(),
+      address: z.string(),
+      dob: z.date(),
+      company: z.object({
+        id: z.number(),
+        name: z.string()
+      }),
+      role: z.object({
+        id: z.number(),
+        name: z.string()
+      }),
+      mobile_number: z.string(),
+      no_password: z.boolean()
     }),
     message: z.string()
   })
