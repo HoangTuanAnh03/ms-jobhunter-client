@@ -13,17 +13,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { LoginBodyType, LoginBody } from "@/schemaValidations/auth.schema";
 import { useToast } from "@/hooks/use-toast";
-import authApiRequest from "@/apiRequests/auth";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { Description } from "@radix-ui/react-toast";
 import Link from "next/link";
-
+import { useLoginMutation } from "@/queries/useAuth";
 
 const LoginForm = () => {
   const { toast } = useToast();
   const router = useRouter();
-  const [passwordConfirmation, setPasswordConfirmation] = useState("")
+  const loginMutation = useLoginMutation();
 
   const form = useForm<LoginBodyType>({
     resolver: zodResolver(LoginBody),
@@ -36,12 +34,14 @@ const LoginForm = () => {
 
   // 2. Define a submit handler.
   async function onSubmit(values: LoginBodyType) {
-    const resLogin = await authApiRequest.login(values);
+    if (loginMutation.isPending) return;
 
-    if (resLogin.payload.code === 200) {
-      // toast("Đăng nhập thành công");
-      // form.reset();
-      // await authApiRequest.auth(resLogin.payload);
+    const res = await loginMutation.mutateAsync(values);
+    console.log("🚀 ~ onSubmit ~ res:", res);
+
+    if (res.payload.code === 200) {
+      // toast({ description: "Đăng nhập thành công" });
+      form.reset();
       router.push("/");
     } else {
       toast({
@@ -71,7 +71,12 @@ const LoginForm = () => {
                 Email <abbr className="text-red-600">*</abbr>
               </FormLabel>
               <FormControl>
-                <Input className="h-11" placeholder="Email" type="email" {...field} />
+                <Input
+                  className="h-11"
+                  placeholder="Email"
+                  type="email"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -91,7 +96,12 @@ const LoginForm = () => {
                 </Description>
               </div>
               <FormControl>
-                <Input className="h-11" placeholder="Mật khẩu" type="password" {...field} />
+                <Input
+                  className="h-11"
+                  placeholder="Mật khẩu"
+                  type="password"
+                  {...field}
+                />
                 {/* <PasswordInput/> */}
                 {/* <PasswordInput
                   id="password_confirmation"

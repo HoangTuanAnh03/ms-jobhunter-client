@@ -2,14 +2,14 @@ import authApiRequest from "@/apiRequests/auth";
 import envConfig from "@/config";
 import { normalizePath } from "@/lib/utils";
 import { LoginResType } from "@/schemaValidations/auth.schema";
-import { redirect } from 'next/navigation'
+import { redirect } from "next/navigation";
 
 type CustomOptions = Omit<RequestInit, "method"> & {
   baseUrl?: string | undefined;
 };
 
 const ENTITY_ERROR_STATUS = 422;
-const AUTHENTICATION_ERROR_STATUS = 401
+const AUTHENTICATION_ERROR_STATUS = 401;
 
 type EntityErrorPayload = {
   message: string;
@@ -60,7 +60,7 @@ class AccessToken {
 }
 
 export const clientAccessToken = new AccessToken();
-let clientLogoutRequest: null | Promise<any> = null
+let clientLogoutRequest: null | Promise<any> = null;
 
 const request = async <Response>(
   method: "GET" | "POST" | "PUT" | "DELETE",
@@ -110,46 +110,47 @@ const request = async <Response>(
         }
       );
     } else if (res.status === AUTHENTICATION_ERROR_STATUS) {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         if (!clientLogoutRequest) {
-          clientLogoutRequest = fetch('/api/logout', {
-            method: 'POST',
+          clientLogoutRequest = fetch("/api/logout", {
+            method: "POST",
             body: JSON.stringify({ force: true }),
             headers: {
-              ...baseHeaders
-            }
-          })
+              ...baseHeaders,
+            },
+          });
 
-          await clientLogoutRequest
-          clientAccessToken.value = ''
-          clientLogoutRequest = null
-          location.href = '/login'
+          await clientLogoutRequest;
+          clientAccessToken.value = "";
+          clientLogoutRequest = null;
+          location.href = "/login";
         }
       } else {
         const sessionToken = (options?.headers as any)?.Authorization.split(
-          'Bearer '
-        )[1]
-        redirect(`/logout?sessionToken=${sessionToken}`)
+          "Bearer "
+        )[1];
+        redirect(`/logout?sessionToken=${sessionToken}`);
       }
     }
-    else {
-      throw new HttpError(data);
-    }
+    // else {
+    //   throw new HttpError(data);
+    // }
+    // return data;
   }
 
   // Đảm bảo logic dưới đây chỉ chạy ở phía client (browser)
-  if (typeof window !== "undefined") {
+  if (res.ok && typeof window !== "undefined") {
     if (
-      ["auth/login", "auth/outbound"].some(
-        (item) => normalizePath(url).startsWith(item)
+      ["api/auth/login", "api/auth/outbound", "api/auth/verify"].some((item) =>
+        normalizePath(url).startsWith(item)
       )
     ) {
-      clientAccessToken.value = (
-        payload as IBackendRes<LoginResType>
-      ).data?.access_token!;
-      await authApiRequest.auth(payload as IBackendRes<LoginResType>);
+      const { access_token, refresh_token } = (payload as IBackendRes<LoginResType>).data!;
+      localStorage.setItem("accessToken", access_token);
+      localStorage.setItem("refreshToken", refresh_token);
     } else if ("auth/logout" === normalizePath(url)) {
-      clientAccessToken.value = "";
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
     }
   }
   return data;

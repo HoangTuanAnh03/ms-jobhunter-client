@@ -1,12 +1,12 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import authApiRequest from "@/apiRequests/auth";
+import { toast } from "@/hooks/use-toast";
 
 export default function Authentication() {
   const router = useRouter();
-  const [isLogin, setIsLogin] = useState(false);
 
   useEffect(() => {
     const authCodeRegex = /code=([^&]+)/;
@@ -22,21 +22,23 @@ export default function Authentication() {
       const res = await authApiRequest.outbound(code);
 
       if (res.status === 200) {
-        setIsLogin(true);
+        toast({
+          title: "Đăng nhập thành công bằng Google.",
+        });
+        router.push("/");
       } else {
-        // router.push("/login");
-        router.push("/register");
+        toast({
+          
+          variant: "destructive",
+          title: "Có lỗi xẩy ra!",
+        });
+        router.push("/login");
       }
     }
 
     outbound(authCode);
   }, []);
 
-  useEffect(() => {
-    if (isLogin) {
-      router.push("/");
-    }
-  }, [isLogin, router]);
   return (
     <div className="w-full h-lvh flex flex-col justify-center items-center">
       <Loader2 className="h-[50px] w-[50px] text-blue-600 animate-spin" />

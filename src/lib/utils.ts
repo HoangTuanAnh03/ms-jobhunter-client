@@ -3,7 +3,8 @@ import { EntityError } from "@/utils/api";
 import { type ClassValue, clsx } from "clsx";
 import { UseFormSetError } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
-import jwt from 'jsonwebtoken'
+import jwt from "jsonwebtoken";
+import { number } from "zod";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -41,6 +42,16 @@ export const normalizePath = (path: string) => {
   return path.startsWith("/") ? path.slice(1) : path;
 };
 
-export const decodeJWT = <Payload = any>(token: string) => {
-  return jwt.decode(token) as Payload
-}
+type PayloadJWT = {
+  uid: string;
+  sub: string;
+  scope: string;
+  iss: string;
+  exp: number;
+  iat: number;
+  jti: string;
+};
+
+export const decodeJWT = (token: string) => {
+  return jwt.decode(token) as PayloadJWT;
+};

@@ -3,9 +3,8 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const privatePaths = ['/me']
-const authPaths = ['/login', '/register', '/authenticate']
+const authPaths = ['/login', '/register', '/authenticate', '/verify']
 
-// This function can be marked `async` if using `await` inside
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const accessToken = request.cookies.get('accessToken')?.value

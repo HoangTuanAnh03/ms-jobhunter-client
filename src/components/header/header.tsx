@@ -4,12 +4,11 @@ import Image from "next/image";
 import { NavigationMenuDemo } from "@/components/header/Navigation";
 import { cookies } from "next/headers";
 import { AvatarOption } from "@/components/header/Avatar";
-import { clientAccessToken } from "@/utils/api";
+import { ModeToggle } from "@/components/mode-toggle";
 
 function Header() {
   const cookieStore = cookies();
   const accessToken = cookieStore.get("accessToken");
-  // console.log("🚀 ~ Header ~ clientAccessToken:", clientAccessToken)
   return (
     <header className="sticky top-0 h-16 py-0 px-4 z-50 w-full flex items-center justify-center bg-custom-gradient">
       <div className="max-w-[1860px] px-8 w-full h-full flex items-center justify-between">
@@ -24,9 +23,14 @@ function Header() {
             <Link className="" href={"/company"}>
               Nhà tuyển dụng
             </Link>
-           
-              <AvatarOption/>
-              
+            {
+              accessToken ? (
+                <AvatarOption />
+              ) : (
+                <Link href={"/login"}>Đăng Nhập/Đăng ký</Link>
+              )
+            }
+            <ModeToggle/>
           </div>
         </div>
       </div>

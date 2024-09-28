@@ -15,7 +15,7 @@ export const RegisterBody = z
       .min(1, {
         message: "Thông tin bắt buộc",
       })
-      .email()
+      .email("Email không đúng định dạng")
       .max(256),
     password: z
       .string({})
@@ -53,7 +53,7 @@ export const LoginBody = z
       .min(1, {
         message: "Thông tin bắt buộc",
       })
-      .email()
+      .email("Email không đúng định dạng")
       .max(256),
     password: z
       .string()

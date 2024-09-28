@@ -21,12 +21,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
-import { format } from "path";
 
 const RegisterForm = () => {
-  const { toast } = useToast();
   const router = useRouter();
-  const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [isChecked, setIsChecked] = useState(false);
 
   const form = useForm<RegisterBodyType>({
@@ -41,16 +38,16 @@ const RegisterForm = () => {
 
   // 2. Define a submit handler.
   async function onSubmit(values: RegisterBodyType) {
-    const resRegister = await authApiRequest.register(values);
+    const resRegister = await authApiRequest.sRegister(values);
 
     if (resRegister.payload.code === 201) {
       // form.reset();    
-      router.push(`/verify_email?email=${values.email}`);
+      router.push(`/verify?email=${values.email}`);
     } else if (resRegister.payload.code === 409) {
-      toast({
-        variant: "destructive",
-        title: "Email đã được đăng ký!",
-      });
+      form.setError('email', {
+        type: "invalid",
+        message: "Email đã được đăng ký",
+      })
     }
   }
 
