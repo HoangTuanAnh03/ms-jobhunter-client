@@ -1,10 +1,9 @@
 import { toast } from "@/hooks/use-toast";
 import { EntityError } from "@/utils/api";
 import { type ClassValue, clsx } from "clsx";
+import jwt from "jsonwebtoken";
 import { UseFormSetError } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
-import jwt from "jsonwebtoken";
-import { number } from "zod";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -54,4 +53,14 @@ type PayloadJWT = {
 
 export const decodeJWT = (token: string) => {
   return jwt.decode(token) as PayloadJWT;
+};
+
+const isClient = typeof window !== "undefined";
+
+export const getAccessTokenFormLocalStorage = () => {
+  return isClient ? localStorage.getItem("accessToken") : "";
+};
+
+export const getRefreshTokenFormLocalStorage = () => {
+  return isClient ? localStorage.getItem("refreshToken") : "";
 };

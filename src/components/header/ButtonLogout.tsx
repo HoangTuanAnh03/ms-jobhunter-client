@@ -1,20 +1,20 @@
 "use client";
 
 import authApiRequest from "@/apiRequests/auth";
-import { Button } from "@/components/ui/button";
 import { DropdownMenuShortcut } from "@/components/ui/dropdown-menu";
-import { toast } from "@/hooks/use-toast";
 import { handleErrorApi } from "@/lib/utils";
-import { clientAccessToken } from "@/utils/api";
-import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
+import { useLogoutMutation } from "@/queries/useAuth";
 import { useRouter } from "next/navigation";
 
 export function ButtonLogout() {
   const router = useRouter();
+  const logoutMutation = useLogoutMutation()
 
   const handleLogout = async () => {
+    if (logoutMutation.isPending) return
+
     try {
-      await authApiRequest.logoutClient()
+      await authApiRequest.logout()
       router.push('/login')
     } catch (error) {
       handleErrorApi({
@@ -22,9 +22,6 @@ export function ButtonLogout() {
       })
     }
   }
-
-  console.log("🚀 ~ Header ~ clientAccessToken:", clientAccessToken)
-
 
   return (
     <div

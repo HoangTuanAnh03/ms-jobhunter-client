@@ -59,21 +59,36 @@ class AccessToken {
   }
 }
 
-export const clientAccessToken = new AccessToken();
 let clientLogoutRequest: null | Promise<any> = null;
+
+export const isClient = typeof window !== "undefined";
 
 const request = async <Response>(
   method: "GET" | "POST" | "PUT" | "DELETE",
   url: string,
   options?: CustomOptions | undefined
 ) => {
-  const body = options?.body ? JSON.stringify(options.body) : undefined;
-  const baseHeaders = {
-    "Content-Type": "application/json",
-    Authorization: clientAccessToken.value
-      ? `Bearer ${clientAccessToken.value}`
-      : "",
-  };
+  let body: FormData | string | undefined = undefined;
+  if (options?.body instanceof FormData) {
+    body = options?.body;
+  } else if (options?.body) {
+    body = JSON.stringify(options.body);
+  }
+
+  const baseHeaders: {
+    [key: string]: string;
+  } =
+    body instanceof FormData
+      ? {}
+      : {
+          "Content-Type": "application/json",
+        };
+  if (isClient) {
+    const accessToken = localStorage.getItem("accessToken");
+    if (accessToken) {
+      baseHeaders.Authorization = `Bearer ${accessToken}`;
+    }
+  }
   // Nếu không truyền baseUrl (hoặc baseUrl = undefined) thì lấy từ envConfig.NEXT_PUBLIC_API_ENDPOINT
   // Nếu truyền baseUrl thì lấy giá trị truyền vào, truyền vào '' thì đồng nghĩa với việc chúng ta gọi API đến Next.js Server
 
@@ -82,9 +97,7 @@ const request = async <Response>(
       ? envConfig.NEXT_PUBLIC_API_ENDPOINT
       : options.baseUrl;
 
-  const fullUrl = url.startsWith("/")
-    ? `${baseUrl}${url}`
-    : `${baseUrl}/${url}`;
+  const fullUrl = `${baseUrl}/${normalizePath(url)}`;
 
   const res = await fetch(fullUrl, {
     ...options,
@@ -110,26 +123,30 @@ const request = async <Response>(
         }
       );
     } else if (res.status === AUTHENTICATION_ERROR_STATUS) {
-      if (typeof window !== "undefined") {
+      if (isClient) {
         if (!clientLogoutRequest) {
-          clientLogoutRequest = fetch("/api/logout", {
+          clientLogoutRequest = fetch("/api/auth/logout", {
             method: "POST",
-            body: JSON.stringify({ force: true }),
+            body: null,
             headers: {
               ...baseHeaders,
             },
           });
-
-          await clientLogoutRequest;
-          clientAccessToken.value = "";
-          clientLogoutRequest = null;
-          location.href = "/login";
+          try {
+            await clientLogoutRequest;
+          } catch (error) {
+          } finally {
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+            clientLogoutRequest = null;
+            location.href = "/login";
+          }
         }
       } else {
-        const sessionToken = (options?.headers as any)?.Authorization.split(
+        const accessToken = (options?.headers as any)?.Authorization.split(
           "Bearer "
         )[1];
-        redirect(`/logout?sessionToken=${sessionToken}`);
+        redirect(`/logout?accessToken=${accessToken}`);
       }
     }
     // else {
@@ -139,16 +156,18 @@ const request = async <Response>(
   }
 
   // Đảm bảo logic dưới đây chỉ chạy ở phía client (browser)
-  if (res.ok && typeof window !== "undefined") {
+  if (res.ok && isClient) {
     if (
       ["api/auth/login", "api/auth/outbound", "api/auth/verify"].some((item) =>
         normalizePath(url).startsWith(item)
       )
     ) {
-      const { access_token, refresh_token } = (payload as IBackendRes<LoginResType>).data!;
+      const { access_token, refresh_token } = (
+        payload as IBackendRes<LoginResType>
+      ).data!;
       localStorage.setItem("accessToken", access_token);
       localStorage.setItem("refreshToken", refresh_token);
-    } else if ("auth/logout" === normalizePath(url)) {
+    } else if ("api/auth/logout" === normalizePath(url)) {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
     }

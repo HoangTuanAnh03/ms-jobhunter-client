@@ -8,18 +8,25 @@ const authPaths = ['/login', '/register', '/authenticate', '/verify']
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const accessToken = request.cookies.get('accessToken')?.value
-  // Chưa đăng nhập thì không cho vào private paths
-  if (privatePaths.some((path) => pathname.startsWith(path)) && !accessToken) {
+  const refreshToken = request.cookies.get('refreshToken')?.value
+  // Chưa đăng nhập thì không cho vào private paths 
+  if (privatePaths.some((path) => pathname.startsWith(path)) && !refreshToken) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
   // Đăng nhập rồi thì không cho vào login/register nữa
-  if (authPaths.some((path) => pathname.startsWith(path)) && accessToken) {
+  if (authPaths.some((path) => pathname.startsWith(path)) && refreshToken) {
     return NextResponse.redirect(new URL('/', request.url))
+  }
+  // Trường hợp đăng nhập rồi nhưng accessToken hết hạn
+  if ( privatePaths.some((path) => pathname.startsWith(path)) && !accessToken && refreshToken) {
+    const url =new URL('/logout', request.url)
+    url.searchParams.set('refreshToken', refreshToken)
+    return NextResponse.redirect(url)
   }
   return NextResponse.next()
 }
 
 // See "Matching Paths" below to learn more
 export const config = {
-  matcher: ['/me', '/login', '/register']
+  matcher: ['/me', '/login', '/register', '/authenticate', '/verify']
 }

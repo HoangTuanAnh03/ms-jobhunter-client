@@ -43,12 +43,21 @@ const authApiRequest = {
       baseUrl: "",
     }),
 
-  logout: (refresh_token: string) =>
+  sLogout: (refresh_token: string) =>
     http.post<IBackendRes<any>>(
       "/auth/logout",
       {},
       {
         headers: { Cookie: `refresh_token=${refresh_token}` },
+      }
+    ),
+
+  logout: () =>
+    http.post<IBackendRes<any>>(
+      "/api/auth/logout",
+      {},
+      {
+        baseUrl: "",
       }
     ),
 

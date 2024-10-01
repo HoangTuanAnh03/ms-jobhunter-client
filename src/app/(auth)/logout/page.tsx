@@ -1,27 +1,30 @@
-'use client'
-import authApiRequest from '@/apiRequests/auth'
-import { clientAccessToken } from '@/utils/api'
-
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useEffect } from 'react'
+"use client";
+import { getRefreshTokenFormLocalStorage } from "@/lib/utils";
+import { useLogoutMutation } from "@/queries/useAuth";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef } from "react";
 export default function Logout() {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const accessToken = searchParams.get('accessToken')
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { mutateAsync } = useLogoutMutation();
+  const accessToken = searchParams.get("accessToken");
+  const refreshToken = searchParams.get("refreshToken");
+  const ref = useRef<any>(null);
   useEffect(() => {
-    const controller = new AbortController()
-    const signal = controller.signal
-    if (accessToken === clientAccessToken.value) {
-      authApiRequest
-        .logoutFromNextClientToNextServer(true, signal)
-        .then((res) => {
-          router.push(`/login?redirectFrom=${pathname}`)
-        })
-    }
-    return () => {
-      controller.abort()
-    }
-  }, [accessToken, router, pathname])
-  return <div>page</div>
+    if (ref.current
+      ||(refreshToken && refreshToken !== getRefreshTokenFormLocalStorage())
+      || (accessToken && accessToken === getRefreshTokenFormLocalStorage())
+    )
+      return;
+
+    ref.current = mutateAsync;
+
+    mutateAsync().then((res) => {
+      setTimeout(() => {
+        ref.current = null;
+      }, 1000);
+      router.push("/login");
+    });
+  }, [mutateAsync, router, refreshToken]);
+  return <div>Logout</div>;
 }
