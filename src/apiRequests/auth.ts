@@ -4,10 +4,14 @@ import {
   LoginResType,
   RegisterBodyType,
 } from "@/schemaValidations/auth.schema";
-import { MessageResType } from "@/schemaValidations/common.schema";
 import { NewPasswordReq } from "@/schemaValidations/user.schema";
 
 const authApiRequest = {
+  refreshTokenRequest: null as Promise<{
+    status: number,
+    payload: IBackendRes<LoginResType>
+  }> | null,
+
   sLogin: (body: LoginBodyType) =>
     http.post<IBackendRes<LoginResType>>("/auth/login", body),
 
@@ -61,38 +65,33 @@ const authApiRequest = {
       }
     ),
 
-  logoutFromNextClientToNextServer: (
-    force?: boolean | undefined,
-    signal?: AbortSignal | undefined
-  ) =>
-    http.post<MessageResType>(
-      "/api/auth/logout",
-      {
-        force,
-      },
-      {
-        baseUrl: "",
-        signal,
-      }
-    ),
-
   sRegister: (body: RegisterBodyType) =>
     http.post<IBackendRes<any>>("/auth/register", body),
 
-  nextServerSetCookieForClient: (body: IBackendRes<LoginResType>) =>
-    http.post<string>("/api/auth", body, {
-      baseUrl: "",
-    }),
+  async refreshToken() {
+    if (this.refreshTokenRequest) {
+      return this.refreshTokenRequest;
+    }
+    this.refreshTokenRequest = http.post<IBackendRes<LoginResType>>(
+      "/api/auth/refresh-token",
+      {},
+      {
+        baseUrl: "",
+      }
+    )
+    const result = await this.refreshTokenRequest
+    this.refreshTokenRequest = null
+    return result
+  },
 
-  logoutClient: () =>
-    http.post("/api/logout", null, {
-      baseUrl: "",
-    }),
-
-  getRefreshToken: () =>
-    http.post("/api/getRefreshToken", null, {
-      baseUrl: "",
-    }),
+  sRefreshToken: (refreshToken: string) =>
+    http.post<IBackendRes<LoginResType>>(
+      "/auth/refreshToken",
+      {},
+      {
+        headers: { Cookie: `refresh_token=${refreshToken}` },
+      }
+    ),
 };
 
 export default authApiRequest;

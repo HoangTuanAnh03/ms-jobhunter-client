@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const privatePaths = ['/me']
+const privatePaths = ['/refresh-token','/me']
 const authPaths = ['/login', '/register', '/authenticate', '/verify']
 
 export function middleware(request: NextRequest) {
@@ -19,8 +19,9 @@ export function middleware(request: NextRequest) {
   }
   // Trường hợp đăng nhập rồi nhưng accessToken hết hạn
   if ( privatePaths.some((path) => pathname.startsWith(path)) && !accessToken && refreshToken) {
-    const url =new URL('/logout', request.url)
+    const url =new URL('/refresh-token', request.url)
     url.searchParams.set('refreshToken', refreshToken)
+    url.searchParams.set('redirect', pathname)
     return NextResponse.redirect(url)
   }
   return NextResponse.next()
@@ -28,5 +29,5 @@ export function middleware(request: NextRequest) {
 
 // See "Matching Paths" below to learn more
 export const config = {
-  matcher: ['/me', '/login', '/register', '/authenticate', '/verify']
+  matcher: ['/refresh-token', '/me', '/login', '/register', '/authenticate', '/verify']
 }

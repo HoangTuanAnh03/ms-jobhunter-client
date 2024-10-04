@@ -5,6 +5,7 @@ import "./globals.css";
 import Header from "@/components/header/header";
 import { Toaster } from "@/components/ui/toaster";
 import AppProvider from "@/components/app-provider";
+import RefreshToken from "@/components/refresh-token";
 
 const inter = Inter({ subsets: ["vietnamese"] });
 
@@ -31,6 +32,7 @@ export default function RootLayout({
             <Header />
             <Toaster />
             {children}
+            <RefreshToken/>
           </AppProvider>
         </ThemeProvider>
       </body>

@@ -1,6 +1,6 @@
 import authApiRequest from "@/apiRequests/auth";
 import envConfig from "@/config";
-import { normalizePath } from "@/lib/utils";
+import { normalizePath, removeAccessTokenFormLocalStorage, removeRefreshTokenFormLocalStorage, setAccessTokenFormLocalStorage, setRefreshTokenFormLocalStorage } from "@/lib/utils";
 import { LoginResType } from "@/schemaValidations/auth.schema";
 import { redirect } from "next/navigation";
 
@@ -158,18 +158,18 @@ const request = async <Response>(
   // Đảm bảo logic dưới đây chỉ chạy ở phía client (browser)
   if (res.ok && isClient) {
     if (
-      ["api/auth/login", "api/auth/outbound", "api/auth/verify"].some((item) =>
+      ["api/auth/login", "api/auth/outbound", "api/auth/verify", "api/auth/refresh-token"].some((item) =>
         normalizePath(url).startsWith(item)
       )
     ) {
       const { access_token, refresh_token } = (
         payload as IBackendRes<LoginResType>
       ).data!;
-      localStorage.setItem("accessToken", access_token);
-      localStorage.setItem("refreshToken", refresh_token);
+      setAccessTokenFormLocalStorage(access_token)
+      setRefreshTokenFormLocalStorage(refresh_token)
     } else if ("api/auth/logout" === normalizePath(url)) {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      removeAccessTokenFormLocalStorage()
+      removeRefreshTokenFormLocalStorage()
     }
   }
   return data;
