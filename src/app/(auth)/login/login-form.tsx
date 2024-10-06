@@ -17,11 +17,14 @@ import { useRouter } from "next/navigation";
 import { Description } from "@radix-ui/react-toast";
 import Link from "next/link";
 import { useLoginMutation } from "@/queries/useAuth";
+import { useAppStore } from "@/components/app-provider";
+import { decodeJWT, getAccessTokenFormLocalStorage } from "@/lib/utils";
 
 const LoginForm = () => {
   const { toast } = useToast();
   const router = useRouter();
   const loginMutation = useLoginMutation();
+  const setRole = useAppStore((state) => state.setRole);
 
   const form = useForm<LoginBodyType>({
     resolver: zodResolver(LoginBody),
@@ -41,6 +44,11 @@ const LoginForm = () => {
     if (res.payload.code === 200) {
       // toast({ description: "Đăng nhập thành công" });
       form.reset();
+      const accessToken = getAccessTokenFormLocalStorage();
+      if (accessToken) {
+        const role = decodeJWT(accessToken).scope;
+        setRole(role);
+      }
       router.push("/");
     } else {
       toast({
@@ -116,7 +124,7 @@ const LoginForm = () => {
 
         <Button
           type="submit"
-          className="!mt-8 w-full h-11 bg-[#c82222] text-[16px]"
+          className="!mt-8 w-full h-11 bg-[#ED1B2F] hover:bg-[#c83333] text-[16px]"
         >
           Đăng nhập bằng Email
         </Button>

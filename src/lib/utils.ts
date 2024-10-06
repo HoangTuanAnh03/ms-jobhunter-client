@@ -74,44 +74,47 @@ export const setRefreshTokenFormLocalStorage = (refreshToken: string) => {
   isClient && localStorage.setItem("refreshToken", refreshToken);
 };
 
-export const removeAccessTokenFormLocalStorage = () => {
-  isClient && localStorage.removeItem("accessToken");
+export const removeTokenFormLocalStorage = () => {
+  if (isClient) {
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("accessToken");
+  }
 };
 
-export const removeRefreshTokenFormLocalStorage = () => {
-  isClient && localStorage.removeItem("refreshToken");
-};
-
-
-export const checkAndRefreshToken = async ( param?: {
-  onError?: () => void,
-  onSuccess?: () => void
-}
-) => {
-  const accessToken = getAccessTokenFormLocalStorage()
-  const refreshToken = getRefreshTokenFormLocalStorage()
-  if (!accessToken || !refreshToken) return
+export const checkAndRefreshToken = async (param?: {
+  onError?: () => void;
+  onSuccess?: () => void;
+}) => {
+  const accessToken = getAccessTokenFormLocalStorage();
+  const refreshToken = getRefreshTokenFormLocalStorage();
+  if (!accessToken || !refreshToken) return;
 
   const decodedAccessToken = decodeJWT(accessToken);
   const decodedRefreshToken = decodeJWT(refreshToken);
 
   const now = Math.round(new Date().getTime() / 1000);
-  
+
   // trường hợp  refreshToken hết hạn thì không sử lý
-  if (decodedRefreshToken.exp <= now) return
+  if (decodedRefreshToken.exp <= now) {
+    removeTokenFormLocalStorage();
+    return param?.onError && param.onError();
+  }
 
   // thời gian còn lại của accessToken: decodeAccessToken.exp - now
   // thời gian hết hạn của accessToken: decodedAccessToken.exp - decodedAccessToken.iat
   // Ví dụ thời gian sống của accessToken là 10s thì check còn < 2.5s thì gọi refreshToken
-  if (decodedAccessToken.exp - now < (decodedAccessToken.exp - decodedAccessToken.iat) /3) {
-      try {
-          const {payload} = await authApiRequest.refreshToken();
-          const { access_token, refresh_token } = payload.data!;
-          setAccessTokenFormLocalStorage(access_token);
-          setRefreshTokenFormLocalStorage(refresh_token);
-          param?.onSuccess && param.onSuccess()
-      } catch (error) {
-          param?.onError && param.onError()
-      }
+  if (
+    decodedAccessToken.exp - now <
+    (decodedAccessToken.exp - decodedAccessToken.iat) / 3
+  ) {
+    try {
+      const { payload } = await authApiRequest.refreshToken();
+      const { access_token, refresh_token } = payload.data!;
+      setAccessTokenFormLocalStorage(access_token);
+      setRefreshTokenFormLocalStorage(refresh_token);
+      param?.onSuccess && param.onSuccess();
+    } catch (error) {
+      param?.onError && param.onError();
+    }
   }
-}
+};

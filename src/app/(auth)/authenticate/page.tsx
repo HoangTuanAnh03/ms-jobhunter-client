@@ -1,17 +1,21 @@
 "use client";
-import { useEffect } from "react";
+import authApiRequest from "@/apiRequests/auth";
+import { useAppStore } from "@/components/app-provider";
+import { toast } from "@/hooks/use-toast";
+import { decodeJWT, getAccessTokenFormLocalStorage } from "@/lib/utils";
+import { useOutboundMutation } from "@/queries/useAuth";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import authApiRequest from "@/apiRequests/auth";
-import { toast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 export default function Authentication() {
   const router = useRouter();
+  const setRole = useAppStore((state) => state.setRole);
+  const outboundMutation = useOutboundMutation();
 
   useEffect(() => {
     const authCodeRegex = /code=([^&]+)/;
     const isMatch = window.location.href.match(authCodeRegex);
-
     const authCode = isMatch ? isMatch[1] : "";
 
     if (!isMatch) {
@@ -19,16 +23,22 @@ export default function Authentication() {
     }
 
     async function outbound(code: string) {
-      const res = await authApiRequest.outbound(code);
+      if (outboundMutation.isPending) return;
+
+      const res = await outboundMutation.mutateAsync(code);
 
       if (res.status === 200) {
         toast({
           title: "Đăng nhập thành công bằng Google.",
         });
+        const accessToken = getAccessTokenFormLocalStorage();
+        if (accessToken) {
+          const role = decodeJWT(accessToken).scope;
+          setRole(role);
+        }
         router.push("/");
       } else {
         toast({
-          
           variant: "destructive",
           title: "Có lỗi xẩy ra!",
         });

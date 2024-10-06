@@ -1,4 +1,5 @@
 "use client";
+import { useAppStore } from "@/components/app-provider";
 import { getRefreshTokenFormLocalStorage } from "@/lib/utils";
 import { useLogoutMutation } from "@/queries/useAuth";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -10,6 +11,8 @@ export default function Logout() {
   const accessToken = searchParams.get("accessToken");
   const refreshToken = searchParams.get("refreshToken");
   const ref = useRef<any>(null);
+  const setRole = useAppStore((state) => state.setRole);
+
   useEffect(() => {
     if (ref.current
       ||(refreshToken && refreshToken !== getRefreshTokenFormLocalStorage())
@@ -23,6 +26,7 @@ export default function Logout() {
       setTimeout(() => {
         ref.current = null;
       }, 1000);
+      setRole();
       router.push("/login");
     });
   }, [mutateAsync, router, refreshToken]);

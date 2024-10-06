@@ -1,6 +1,4 @@
 "use client";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -16,14 +14,18 @@ import {
   EditPasswordBodyType,
   NewPasswordReq,
 } from "@/schemaValidations/user.schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 
-import { useRouter } from "next/navigation";
 import authApiRequest from "@/apiRequests/auth";
+import { useAppStore } from "@/components/app-provider";
 import { toast } from "@/hooks/use-toast";
+import { decodeJWT, getAccessTokenFormLocalStorage } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 const EditForm = () => {
   const router = useRouter();
-
+  const setRole = useAppStore((state) => state.setRole);
   const authCodeRegex = /code=([^&]+)/;
   const isMatch = window.location.href.match(authCodeRegex);
   const authCode = isMatch ? isMatch[1] : "";
@@ -50,6 +52,11 @@ const EditForm = () => {
       toast({
         title: "Đổi mật khẩu thành công",
       });
+      const accessToken = getAccessTokenFormLocalStorage();
+      if (accessToken) {
+        const role = decodeJWT(accessToken).scope;
+        setRole(role);
+      }
       router.push("/");
     } else {
       toast({

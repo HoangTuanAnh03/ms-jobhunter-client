@@ -12,3 +12,10 @@ export const useLogoutMutation = () => {
         mutationFn: authApiRequest.logout
     })
 }
+
+export const useOutboundMutation = () => {
+    return useMutation({
+        mutationFn: authApiRequest.outbound
+    })
+}
+

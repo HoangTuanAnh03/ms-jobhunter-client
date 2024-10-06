@@ -1,6 +1,5 @@
-import authApiRequest from "@/apiRequests/auth";
 import envConfig from "@/config";
-import { normalizePath, removeAccessTokenFormLocalStorage, removeRefreshTokenFormLocalStorage, setAccessTokenFormLocalStorage, setRefreshTokenFormLocalStorage } from "@/lib/utils";
+import { normalizePath, removeTokenFormLocalStorage, setAccessTokenFormLocalStorage, setRefreshTokenFormLocalStorage } from "@/lib/utils";
 import { LoginResType } from "@/schemaValidations/auth.schema";
 import { redirect } from "next/navigation";
 
@@ -136,8 +135,7 @@ const request = async <Response>(
             await clientLogoutRequest;
           } catch (error) {
           } finally {
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
+            removeTokenFormLocalStorage()
             clientLogoutRequest = null;
             location.href = "/login";
           }
@@ -168,8 +166,7 @@ const request = async <Response>(
       setAccessTokenFormLocalStorage(access_token)
       setRefreshTokenFormLocalStorage(refresh_token)
     } else if ("api/auth/logout" === normalizePath(url)) {
-      removeAccessTokenFormLocalStorage()
-      removeRefreshTokenFormLocalStorage()
+      removeTokenFormLocalStorage()
     }
   }
   return data;
