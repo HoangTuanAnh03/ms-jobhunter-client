@@ -3,15 +3,15 @@ import authApiRequest from "@/apiRequests/auth";
 import { useAppStore } from "@/components/app-provider";
 import { toast } from "@/hooks/use-toast";
 import { decodeJWT, getAccessTokenFormLocalStorage } from "@/lib/utils";
-import { useOutboundMutation } from "@/queries/useAuth";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import React from "react";
 import { useEffect } from "react";
 
 export default function Authentication() {
   const router = useRouter();
   const setRole = useAppStore((state) => state.setRole);
-  const outboundMutation = useOutboundMutation();
+  const isCalledRef = React.useRef(false);
 
   useEffect(() => {
     const authCodeRegex = /code=([^&]+)/;
@@ -22,11 +22,9 @@ export default function Authentication() {
       router.push("/login");
     }
 
-    async function outbound(code: string) {
-      if (outboundMutation.isPending) return;
-
-      const res = await outboundMutation.mutateAsync(code);
-
+    const outbound = async (code: string) => {
+      const res = await authApiRequest.outbound(code);
+  
       if (res.status === 200) {
         toast({
           title: "Đăng nhập thành công bằng Google.",
@@ -46,7 +44,10 @@ export default function Authentication() {
       }
     }
 
+    if (isCalledRef.current) return;
+
     outbound(authCode);
+    isCalledRef.current = true;
   }, []);
 
   return (
